@@ -5,31 +5,59 @@
   <meta charset="utf-8" />
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta id="viewport" name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui, shrink-to-fit=no" />
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <title> <%= config.title %> </title>
+    <style>
+      html {
+          height: 100%;
+      }
+
+      body {
+          height: 100%;
+          font-family: monospace;
+      }
+
+      .root {
+          display: flex;
+          flex-direction: column;
+          height: 75%;
+      }
+      
+      .footer {
+          margin-top: 24px;
+          display: flex;
+      }
+      
+      .selectedNode {
+          margin-left: 42px;
+      }
+
+      #wrapper {
+          padding: 20px;
+          border: 1px solid black;
+          flex: 1;
+      }
+  </style>    
 </head>
 
-<body>
-  <div id="wrapper">
-    <canvas id="canvas"></canvas>
+  <body>
+    <div class="root">
+      <div id="wrapper">
+          <canvas id="canvas"></canvas>
+      </div>
+      <div class="footer">
+          <div class="selectedNode">
+              <pre id="selected-node"></pre>
+          </div>
+      </div>
   </div>
   <script>
-    // var name = "<%= config.name %>.min.js";
-
-    // function addScript(src, callback) {
-    //   var scr = document.createElement('script');
-    //   scr.setAttribute('src', src);
-    //   if (typeof callback === 'function') {
-    //     scr.onload = callback;
-    //   }
-    //   document.body.appendChild(scr);
-    // }
-
-    // window.onload = function () {
-    //   addScript(name);
-    // }
+  window.onload = function () {
+    var data = <%= htmlWebpackPlugin.options.reportData %>
+    createChart(data.data, data.marks);
+  }
   </script>
 </body>
 

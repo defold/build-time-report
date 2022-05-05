@@ -28,7 +28,7 @@ module.exports = function () {
         path: path.join(rootPath, '_build/dev'),
         filename: config.name + '.min.js',
         hotUpdateChunkFilename: '../.temp/.hot/hot-update.js',
-        hotUpdateMainFilename: '../.temp/.hot/hot-update.json'
+        hotUpdateMainFilename: '../.temp/.hot/hot-update.json',
     };
     devConfig.plugins = devConfig.plugins.concat([
         new webpack.DefinePlugin({
@@ -41,7 +41,8 @@ module.exports = function () {
             templateParameters: {
                 config: config,
                 buildDate: new Date
-            }
+            },
+            reportData: '{"data":[{"name":"foo","start":300,"duration":200,"type":"task","children":[{"name":"foo","start":310,"duration":50,"type":"sub-task","color":"#AA0000"}]}],"marks":[{"shortName":"DCL","fullName":"DOMContentLoaded","timestamp":500}]}'
         }),
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [

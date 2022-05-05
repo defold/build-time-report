@@ -29,14 +29,15 @@ module.exports = function () {
         new CleanWebpackPlugin(),
         new HTMLWebpackPlugin({
             template: 'sources/index.html',
-            filename: 'index.html',
+            filename: 'time_report_template.html',
             inlineSource: '.(js)$',
             // inject: false,
             scriptLoading: 'module',
             templateParameters: {
                 config: config,
                 buildDate: new Date
-            }
+            },
+            reportData: '{{{json-data}}}'
         }),
         new HtmlWebpackInlineSourcePlugin(HTMLWebpackPlugin)
     ]);
