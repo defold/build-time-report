@@ -11,33 +11,43 @@
   <title> <%= config.title %> </title>
     <style>
       html {
-          height: 100%;
+        height: 100%;
       }
 
       body {
-          height: 100%;
-          font-family: monospace;
+        height: 100%;
+        font-family: monospace;
       }
 
       .root {
-          display: flex;
-          flex-direction: column;
-          height: 75%;
+        display: flex;
+        flex-direction: column;
+        height: 75%;
       }
       
       .footer {
-          margin-top: 24px;
-          display: flex;
+        margin-top: 24px;
+        display: flex;
       }
       
       .selectedNode {
-          margin-left: 42px;
+        margin-left: 42px;
       }
 
       #wrapper {
-          padding: 20px;
-          border: 1px solid black;
-          flex: 1;
+        padding: 20px;
+        border: 1px solid black;
+        flex: 1;
+      }
+
+      #selected-node {
+        padding: 10px;
+        width: 100%;
+        word-break: break-spaces;
+        display: block;
+        font-family: monospace;
+        white-space: pre;
+        margin: 1em 0px;
       }
   </style>    
 </head>
@@ -49,7 +59,7 @@
       </div>
       <div class="footer">
           <div class="selectedNode">
-              <pre id="selected-node"></pre>
+              <div id="selected-node"></pre>
           </div>
       </div>
   </div>
