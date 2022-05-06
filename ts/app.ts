@@ -57,16 +57,17 @@ function createChart(data: any, marks: any) {
             tooltip : (data : any, renderEngine : any, mouse : any) => {
                 if (!mouse) 
                     return;
+                var newMouse = {x:mouse.x, y:mouse.y};
                 var fields = [{ text: data.data.name }, { text: data.data.duration + " ms" }];
                 const maxWidth = fields
                     .map(({ text }) => text)
                     .map((text) => renderEngine.ctx.measureText(text))
                     .reduce((acc, { width }) => Math.max(acc, width), 0);
                 const fullWidth = maxWidth + renderEngine.blockPaddingLeftRight * 2;
-                if (mouse.x + 10 + fullWidth > fullWith) {
-                    mouse.x = mouse.x - 20 - fullWidth;
+                if (newMouse.x + 10 + fullWidth > fullWith) {
+                    newMouse.x = newMouse.x - 20 - fullWidth;
                 }
-                renderEngine.renderTooltipFromData(fields, mouse);
+                renderEngine.renderTooltipFromData(fields, newMouse);
             } 
       });
 }
