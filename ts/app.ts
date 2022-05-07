@@ -58,7 +58,9 @@ function createChart(data: any, marks: any) {
                 if (!mouse) 
                     return;
                 var newMouse = {x:mouse.x, y:mouse.y};
-                var fields = [{ text: data.data.name }, { text: data.data.duration + " ms" }];
+                var fields = [  { text: data.data.name || data.data.fullName},
+                                { text: data.data.duration || data.data.timestamp + " ms" }
+                             ];
                 const maxWidth = fields
                     .map(({ text }) => text)
                     .map((text) => renderEngine.ctx.measureText(text))
