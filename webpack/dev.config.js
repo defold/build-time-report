@@ -9,6 +9,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 const baseConfig = require('./base.config.js');
 const HTMLWebpackPlugin = require('html-webpack-plugin')
+const example = require('../sources/example.json');
 
 module.exports = function () {
     let devConfig = baseConfig;
@@ -42,7 +43,7 @@ module.exports = function () {
                 config: config,
                 buildDate: new Date
             },
-            reportData: '{"data":[{"name":"foo","start":300,"duration":200,"type":"task","children":[{"name":"foo","start":310,"duration":50,"type":"sub-task","color":"#AA0000"}]}],"marks":[{"shortName":"DCL","fullName":"DOMContentLoaded","timestamp":500}]}'
+            reportData: JSON.stringify(example),
         }),
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: [

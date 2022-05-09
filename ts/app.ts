@@ -1,4 +1,49 @@
 import FlameChart from 'flame-chart-js';
+var $  = require( 'jquery' );
+require( 'datatables.net' );
+
+function recurciveTableDataCreationd(data:any, finalData:any, parentName: string) : any {
+    data.forEach((el : any) => {
+        if (el.output) {
+            if (!finalData[el.output]) {
+                finalData[el.output] = {};
+            }
+            if (!finalData[el.output][parentName]) {
+                finalData[el.output][parentName] = {};
+            }
+            finalData[el.output][parentName]["duration"] = el.duration;
+            finalData[el.output][parentName]["start"] = el.start;
+            if (!finalData[el.output]["duration"]) {
+                finalData[el.output]["duration"] = 0;
+            }
+            finalData[el.output]["duration"] += el.duration;
+            finalData[el.output]["name"] = el.name;
+        }
+        if (el.children) {
+            recurciveTableDataCreationd(el.children, finalData, el.name);
+        }
+    });
+}
+
+function getTableData(data : any) : any {
+    var finalData:any = {};
+    recurciveTableDataCreationd(data, finalData, undefined);
+    var result:any = [];
+    var i = 0;
+    for (let key in finalData) {
+        let value = finalData[key];
+        result[i] = {};
+        result[i]["output"] = key;
+        result[i]["createTime"] = value["Create tasks"] ? value["Create tasks"]["duration"] / 1000 : undefined;
+        result[i]["createStart"] = value["Create tasks"] ? value["Create tasks"]["start"] : undefined; 
+        result[i]["buildTime"] = value["Build tasks"]["duration"] / 1000;
+        result[i]["buildStart"] = value["Build tasks"]["start"];
+        result[i]["totalTime"] = value["duration"] / 1000;
+        result[i]["name"] = value["name"];
+        i++;
+    }
+    return result;
+}
 
 function createChart(data: any, marks: any) {
     const canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
@@ -26,7 +71,7 @@ function createChart(data: any, marks: any) {
             end:undefined,
             level:undefined,
             index:undefined,
-            duration: node.duration/1000 +" sec",
+            duration: node.duration ? node.duration/1000 +" sec" : undefined,
             parent: node.parent ? node.parent.name :undefined
         }, null, '  ')}` : '');
     });
@@ -72,6 +117,49 @@ function createChart(data: any, marks: any) {
                 renderEngine.renderTooltipFromData(fields, newMouse);
             } 
       });
+
+    // Setup resource table
+    var tableData:any = getTableData(data);
+    var table = $('#resources-list').DataTable( {
+        data: tableData,
+        scrollX: true,
+        fixedColumns: true,
+        "footerCallback": function ( row : any, data : any, start : any, end : any, display : any ) {
+            var api = this.api();
+            api
+                .column( 1, {search: 'applied'} )
+                .data()
+                .reduce( function (a : any, b : any) {
+                    return a + b;
+                }, 0 );
+        },
+
+        columns: [
+            { title: "Type", data: "name" },
+            { title: "Total time sec", data: "totalTime" },
+            { title: "Create Task sec", data: function ( row : any, type : any, val : any, meta : any ) {
+                if (row.createTime === undefined) {
+                    return "?";
+                } else {
+                    return row.createTime;
+                }
+                } },
+            { title: "Build Task sec", data: "buildTime" },
+            { title: "Output", data: "output" },
+        ]
+    } );
+    const ZOOM_STEP = 1;
+    $( '#resources-list' ).on( 'click', 'tbody td:not(:first-child)', function (e : any) {
+        var index = $(this).closest('td').index();
+        var rowData = table.row( this ).data();
+        if ( index == 2) {
+            if (rowData["createTime"]) {
+                flameChart.setZoom(rowData["createStart"] -ZOOM_STEP, rowData["createStart"] + (rowData["createTime"]*1000) + ZOOM_STEP);
+            }
+        } else if (index == 3) {
+            flameChart.setZoom(rowData["buildStart"] -ZOOM_STEP, rowData["buildStart"] + (rowData["buildTime"]*1000) + ZOOM_STEP);
+        }
+    } );
 }
 
 (window as any).createChart = createChart;

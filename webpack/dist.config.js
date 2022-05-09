@@ -30,7 +30,7 @@ module.exports = function () {
         new HTMLWebpackPlugin({
             template: 'sources/index.html',
             filename: 'time_report_template.html',
-            inlineSource: '.(js)$',
+            inlineSource: '.(js|css)$',
             // inject: false,
             scriptLoading: 'module',
             templateParameters: {
