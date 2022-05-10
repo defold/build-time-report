@@ -1,6 +1,7 @@
 import FlameChart from 'flame-chart-js';
+import 'datatables.net-dt/css/jquery.datatables.css';
 var $  = require( 'jquery' );
-require( 'datatables.net' );
+import 'datatables.net-dt';
 
 function recurciveTableDataCreationd(data:any, finalData:any) : any {
     data.forEach((el : any) => {
