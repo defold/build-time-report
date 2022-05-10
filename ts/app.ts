@@ -29,7 +29,6 @@ function recurciveTableDataCreationd(data:any, finalData:any) : any {
 function getTableData(data : any) : any {
     var finalData:any = {};
     recurciveTableDataCreationd(data, finalData);
-    console.log(finalData);
     var result:any = [];
     var i = 0;
     for (let key in finalData) {
