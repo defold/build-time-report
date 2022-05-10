@@ -63,7 +63,7 @@ function createChart(data: any, marks: any) {
     });
     const nodeView : any = document.getElementById('selected-node');
     flameChart.on('select', (node: any, type: any) => {
-        nodeView.innerHTML = (node ? `${type}\r\n${JSON.stringify({
+        nodeView.innerHTML = (node ? `${JSON.stringify({
             ...node,
             children: undefined,
             color:undefined,
@@ -149,17 +149,29 @@ function createChart(data: any, marks: any) {
         ]
     } );
     const ZOOM_STEP = 1;
+    const CREATE_ROW_INDEX = 2;
+    const BUILD_ROW_INDEX = 3;
     $( '#resources-list' ).on( 'click', 'tbody td:not(:first-child)', function (e : any) {
         var index = $(this).closest('td').index();
         var rowData = table.row( this ).data();
-        if ( index == 2) {
+        if ( index == CREATE_ROW_INDEX) {
             if (rowData["createTime"]) {
                 flameChart.setZoom(rowData["createStart"] -ZOOM_STEP, rowData["createStart"] + (rowData["createTime"]*1000) + ZOOM_STEP);
             }
-        } else if (index == 3) {
+        } else if (index == BUILD_ROW_INDEX) {
             flameChart.setZoom(rowData["buildStart"] -ZOOM_STEP, rowData["buildStart"] + (rowData["buildTime"]*1000) + ZOOM_STEP);
         }
     } );
+
+    $( '#resources-list' ).on( 'mouseenter', 'tbody td:not(:first-child)', function (e : any) {
+        var index = $(this).closest('td').index();
+        if (index == CREATE_ROW_INDEX || index == BUILD_ROW_INDEX) {
+            var rowData = table.row( this ).data();
+            if (rowData["createTime"] || index == BUILD_ROW_INDEX) {
+                e.target.style.cursor = "pointer";
+            }
+        }
+    });
 }
 
 (window as any).createChart = createChart;
