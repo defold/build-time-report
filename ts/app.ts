@@ -2,17 +2,17 @@ import FlameChart from 'flame-chart-js';
 var $  = require( 'jquery' );
 require( 'datatables.net' );
 
-function recurciveTableDataCreationd(data:any, finalData:any, parentName: string) : any {
+function recurciveTableDataCreationd(data:any, finalData:any) : any {
     data.forEach((el : any) => {
         if (el.output) {
             if (!finalData[el.output]) {
                 finalData[el.output] = {};
             }
-            if (!finalData[el.output][parentName]) {
-                finalData[el.output][parentName] = {};
+            if (!finalData[el.output][el.type]) {
+                finalData[el.output][el.type] = {};
             }
-            finalData[el.output][parentName]["duration"] = el.duration;
-            finalData[el.output][parentName]["start"] = el.start;
+            finalData[el.output][el.type]["duration"] = el.duration;
+            finalData[el.output][el.type]["start"] = el.start;
             if (!finalData[el.output]["duration"]) {
                 finalData[el.output]["duration"] = 0;
             }
@@ -20,24 +20,27 @@ function recurciveTableDataCreationd(data:any, finalData:any, parentName: string
             finalData[el.output]["name"] = el.name;
         }
         if (el.children) {
-            recurciveTableDataCreationd(el.children, finalData, el.name);
+            recurciveTableDataCreationd(el.children, finalData);
         }
     });
 }
 
 function getTableData(data : any) : any {
     var finalData:any = {};
-    recurciveTableDataCreationd(data, finalData, undefined);
+    recurciveTableDataCreationd(data, finalData);
+    console.log(finalData);
     var result:any = [];
     var i = 0;
     for (let key in finalData) {
         let value = finalData[key];
         result[i] = {};
         result[i]["output"] = key;
-        result[i]["createTime"] = value["Create tasks"] ? value["Create tasks"]["duration"] / 1000 : undefined;
-        result[i]["createStart"] = value["Create tasks"] ? value["Create tasks"]["start"] : undefined; 
-        result[i]["buildTime"] = value["Build tasks"]["duration"] / 1000;
-        result[i]["buildStart"] = value["Build tasks"]["start"];
+        result[i]["createTimeMS"] = value["createTask"]["duration"];
+        result[i]["createTime"] = value["createTask"]["duration"] / 1000;
+        result[i]["createStart"] = value["createTask"]["start"]; 
+        result[i]["buildTimeMS"] = value["buildTask"]["duration"];
+        result[i]["buildTime"] = value["buildTask"]["duration"] / 1000;
+        result[i]["buildStart"] = value["buildTask"]["start"];
         result[i]["totalTime"] = value["duration"] / 1000;
         result[i]["name"] = value["name"];
         i++;
@@ -155,21 +158,17 @@ function createChart(data: any, marks: any) {
         var index = $(this).closest('td').index();
         var rowData = table.row( this ).data();
         if ( index == CREATE_ROW_INDEX) {
-            if (rowData["createTime"]) {
-                flameChart.setZoom(rowData["createStart"] -ZOOM_STEP, rowData["createStart"] + (rowData["createTime"]*1000) + ZOOM_STEP);
-            }
+            console.log(rowData["createStart"]);
+            flameChart.setZoom(rowData["createStart"] -ZOOM_STEP, rowData["createStart"] + rowData["createTimeMS"] + ZOOM_STEP);
         } else if (index == BUILD_ROW_INDEX) {
-            flameChart.setZoom(rowData["buildStart"] -ZOOM_STEP, rowData["buildStart"] + (rowData["buildTime"]*1000) + ZOOM_STEP);
+            flameChart.setZoom(rowData["buildStart"] -ZOOM_STEP, rowData["buildStart"] + rowData["buildTimeMS"] + ZOOM_STEP);
         }
     } );
 
     $( '#resources-list' ).on( 'mouseenter', 'tbody td:not(:first-child)', function (e : any) {
         var index = $(this).closest('td').index();
         if (index == CREATE_ROW_INDEX || index == BUILD_ROW_INDEX) {
-            var rowData = table.row( this ).data();
-            if (rowData["createTime"] || index == BUILD_ROW_INDEX) {
-                e.target.style.cursor = "pointer";
-            }
+            e.target.style.cursor = "pointer";
         }
     });
 }
