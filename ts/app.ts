@@ -48,6 +48,10 @@ function getTableData(data : any) : any {
     return result;
 }
 
+function formatTime(time: any) {
+    return (time).toFixed(4);
+}
+
 function createChart(data: any, marks: any) {
     const canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
 
@@ -120,6 +124,12 @@ function createChart(data: any, marks: any) {
                 renderEngine.renderTooltipFromData(fields, newMouse);
             } 
       });
+    
+    const TOTAL_ROW_INDEX = 1;
+    const CREATE_ROW_INDEX = 2;
+    const BUILD_ROW_INDEX = 3;
+
+
 
     // Setup resource table
     var tableData:any = getTableData(data);
@@ -129,12 +139,64 @@ function createChart(data: any, marks: any) {
         fixedColumns: true,
         "footerCallback": function ( row : any, data : any, start : any, end : any, display : any ) {
             var api = this.api();
-            api
-                .column( 1, {search: 'applied'} )
+            var totalTime = api
+                .column( TOTAL_ROW_INDEX, {search: 'applied'} )
                 .data()
-                .reduce( function (a : any, b : any) {
+                .reduce( function (a:any, b:any) {
                     return a + b;
                 }, 0 );
+
+            var totalTimePage = api
+                .column( TOTAL_ROW_INDEX, {search: 'applied',
+                              page : 'current'} )
+                .data()
+                .reduce( function (a:any, b:any) {
+                    return a + b;
+                }, 0 );
+
+            var createTotal = api
+                .column( CREATE_ROW_INDEX, {search: 'applied'} )
+                .data()
+                .reduce( function (a:any, b:any) {
+                    return a + b;
+                }, 0 );
+
+            var createTotalPage = api
+                .column( CREATE_ROW_INDEX, {search: 'applied',
+                              page : 'current'} )
+                .data()
+                .reduce( function (a:any, b:any) {
+                    return a + b;
+                }, 0 );
+
+            var buildTotal = api
+                .column( BUILD_ROW_INDEX, {search: 'applied'} )
+                .data()
+                .reduce( function (a:any, b:any) {
+                    return a + b;
+                }, 0 );
+
+            var buildTotalPage = api
+                .column( BUILD_ROW_INDEX, {search: 'applied',
+                              page : 'current'} )
+                .data()
+                .reduce( function (a:any, b:any) {
+                    return a + b;
+                }, 0 );
+
+            // Update time in footer
+            $( api.column( 0 ).footer() ).html(
+                "Page sec" + " <br>(Total sec)"
+                );
+            $( api.column( TOTAL_ROW_INDEX ).footer() ).html(
+                formatTime(totalTimePage) + " <br>(" + formatTime(totalTime) + ")"
+                );
+            $( api.column( CREATE_ROW_INDEX ).footer() ).html(
+                formatTime(createTotalPage) + " <br>(" + formatTime(createTotal) + ")"
+                );
+            $( api.column( BUILD_ROW_INDEX ).footer() ).html(
+                formatTime(buildTotalPage) + " <br>(" + formatTime(buildTotal) + ")"
+                );
         },
 
         columns: [
@@ -152,8 +214,6 @@ function createChart(data: any, marks: any) {
         ]
     } );
     const ZOOM_STEP = 1;
-    const CREATE_ROW_INDEX = 2;
-    const BUILD_ROW_INDEX = 3;
     $( '#resources-list' ).on( 'click', 'tbody td:not(:first-child)', function (e : any) {
         var index = $(this).closest('td').index();
         var rowData = table.row( this ).data();
