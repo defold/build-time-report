@@ -38,9 +38,16 @@ function getTableData(data : any) : any {
         result[i]["createTimeMS"] = value["createTask"]["duration"];
         result[i]["createTime"] = value["createTask"]["duration"] / 1000;
         result[i]["createStart"] = value["createTask"]["start"]; 
-        result[i]["buildTimeMS"] = value["buildTask"]["duration"];
-        result[i]["buildTime"] = value["buildTask"]["duration"] / 1000;
-        result[i]["buildStart"] = value["buildTask"]["start"];
+        if (value["buildTask"]) {
+            result[i]["buildTimeMS"] = value["buildTask"]["duration"];
+            result[i]["buildTime"] = value["buildTask"]["duration"] / 1000;
+            result[i]["buildStart"] = value["buildTask"]["start"];
+        }
+        else {
+            result[i]["buildTimeMS"] = 0;
+            result[i]["buildTime"] = 0;
+            result[i]["buildStart"] = 0;
+        }
         result[i]["totalTime"] = value["duration"] / 1000;
         result[i]["name"] = value["name"];
         i++;
