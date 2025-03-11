@@ -1,9 +1,10 @@
-import FlameChart from 'flame-chart-js';
+import { FlameChartContainer, TimeGridPlugin, MarksPlugin, FlameChartPlugin } from 'flame-chart-js';
+import { TogglePlugin } from 'flame-chart-js';
 import 'datatables.net-dt/css/jquery.datatables.css';
 var $  = require( 'jquery' );
 import 'datatables.net-dt';
 
-function recurciveTableDataCreationd(data:any, finalData:any) : any {
+function recurciveTableDataCreation(data:any, finalData:any) : any {
     data.forEach((el : any) => {
         if (el.output) {
             if (!finalData[el.output]) {
@@ -19,16 +20,26 @@ function recurciveTableDataCreationd(data:any, finalData:any) : any {
             }
             finalData[el.output]["duration"] += el.duration;
             finalData[el.output]["name"] = el.name;
+            if (el.type == "createTask" && el.children) {
+                let childrenDuration = 0;
+                el.children.forEach((el : any) => {
+                    if (el.type == "createTask") {
+                        childrenDuration += el.duration;
+                    }
+                });
+                finalData[el.output]["duration"] -= childrenDuration;
+                finalData[el.output][el.type]["duration"] -= childrenDuration;
+            }
         }
         if (el.children) {
-            recurciveTableDataCreationd(el.children, finalData);
+            recurciveTableDataCreation(el.children, finalData);
         }
     });
 }
 
 function getTableData(data : any) : any {
     var finalData:any = {};
-    recurciveTableDataCreationd(data, finalData);
+    recurciveTableDataCreation(data, finalData);
     var result:any = [];
     var i = 0;
     for (let key in finalData) {
@@ -61,34 +72,37 @@ function formatTime(time: any) {
 
 function createChart(data: any, marks: any) {
     const canvas: HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
-
-    const flameChart = new FlameChart({
-        canvas,
-        data: data,
-        marks: marks,
-        colors: {
-            'task': '#FFFFFF',
-            'sub-task': '#000000'
-        },
-        options: {
-            timeUnits: 'ms'
-        },
-        styles: {}
-    });
+    // create plugins from data (see example.json)
+    let chartPlugins: any[] = [];
+    let allPlugins: any[] = [];
+    let flameChartColors = {
+        'task': '#FFFFFF',
+        'sub-task': '#000000'
+    };
     const nodeView : any = document.getElementById('selected-node');
-    flameChart.on('select', (node: any, type: any) => {
-        nodeView.innerHTML = (node ? `${JSON.stringify({
-            ...node,
-            children: undefined,
-            color:undefined,
-            start:undefined,
-            end:undefined,
-            level:undefined,
-            index:undefined,
-            duration: node.duration ? node.duration/1000 +" sec" : undefined,
-            parent: node.parent ? node.parent.name :undefined
-        }, null, '  ')}` : '');
-    });
+    for (let i = 0; i < data.length; i++) {
+        const plugin = new FlameChartPlugin({ data: [data[i]], colors: flameChartColors, name: 'flameChart' + i });
+        chartPlugins.push(plugin);
+        plugin.on('select', (_node: any, type: any) => {
+            const node = { ..._node.node.source };
+            node.children = undefined;
+            node.color = undefined;
+            node.start = undefined;
+            node.end = undefined;
+            node.level = undefined;
+            node.index = undefined;
+            node.duration = node.duration ? node.duration/1000 +" s" : undefined;
+            node.parent = node.parent ? node.parent.name :undefined;
+            nodeView.innerHTML = (node ? `${JSON.stringify({node}, null, '  ')}` : '');
+        });
+    }
+
+    allPlugins.push(new TimeGridPlugin({}));
+    allPlugins.push(new MarksPlugin({ data: marks }));
+    for(let i = 0; i < chartPlugins.length; i++) {
+        allPlugins.push(new TogglePlugin(data[i].name));
+        allPlugins.push(chartPlugins[i]);
+    }
 
     // resize
     const wrapper = document.getElementById('wrapper');
@@ -103,40 +117,56 @@ function createChart(data: any, marks: any) {
     const [width, height] = getWrapperWH();
     canvas.width = width;
     canvas.height = height;
-    flameChart.resize(...getWrapperWH());
-    var fullWith = width;
+    const flameChart = new FlameChartContainer({
+        canvas,
+        // data: data,
+        plugins: allPlugins,
+        // marks: marks,
+        colors: flameChartColors,
+        options: {
+            timeUnits: 'ms'
+        },
+        // styles: {}
+    });
+    flameChart.resize(width, height);
+    // var fullWith = width;
+
+    // Force a resize after creation to ensure proper initial layout
+    setTimeout(() => {
+        const [width, height] = getWrapperWH();
+        // fullWith = width;
+        flameChart.resize(width, height);
+    }, 0);
 
     window.addEventListener('resize', () => {
         const [width, height] = getWrapperWH();
-        fullWith = width;
+        // fullWith = width;
         flameChart.resize(width, height);
     });
 
-    flameChart.setSettings({ 
-            tooltip : (data : any, renderEngine : any, mouse : any) => {
-                if (!mouse) 
-                    return;
-                var newMouse = {x:mouse.x, y:mouse.y};
-                var fields = [  { text: (data.data.name || data.data.fullName) || ""},
-                                { text: (data.data.duration || data.data.timestamp) + " ms" }
-                             ];
-                const maxWidth = fields
-                    .map(({ text }) => text)
-                    .map((text) => renderEngine.ctx.measureText(text))
-                    .reduce((acc, { width }) => Math.max(acc, width), 0);
-                const fullWidth = maxWidth + renderEngine.blockPaddingLeftRight * 2;
-                if (newMouse.x + 10 + fullWidth > fullWith) {
-                    newMouse.x = newMouse.x - 20 - fullWidth;
-                }
-                renderEngine.renderTooltipFromData(fields, newMouse);
-            } 
-      });
+    // flameChart.setSettings({
+    //         tooltip : (data : any, renderEngine : any, mouse : any) => {
+    //             if (!mouse) 
+    //                 return;
+    //             var newMouse = {x:mouse.x, y:mouse.y};
+    //             var fields = [  { text: (data.data.name || data.data.fullName) || ""},
+    //                             { text: (data.data.duration || data.data.timestamp) + " ms" }
+    //                          ];
+    //             const maxWidth = fields
+    //                 .map(({ text }) => text)
+    //                 .map((text) => renderEngine.ctx.measureText(text))
+    //                 .reduce((acc, { width }) => Math.max(acc, width), 0);
+    //             const fullWidth = maxWidth + renderEngine.blockPaddingLeftRight * 2;
+    //             if (newMouse.x + 10 + fullWidth > fullWith) {
+    //                 newMouse.x = newMouse.x - 20 - fullWidth;
+    //             }
+    //             renderEngine.renderTooltipFromData(fields, newMouse);
+    //         } 
+    //   });
     
     const TOTAL_ROW_INDEX = 1;
     const CREATE_ROW_INDEX = 2;
     const BUILD_ROW_INDEX = 3;
-
-
 
     // Setup resource table
     var tableData:any = getTableData(data);
